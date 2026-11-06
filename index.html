@@ -162,7 +162,7 @@
   .yn:last-child { border-bottom: 0; }
   .yn.sub-option { background: #f9fbfd; padding-left: 4px; border-bottom: 1px dashed var(--line); }
   .yn.sub-option.is-disabled { opacity: .45; }
-  .yn .price { color: var(--muted); font-size: .82rem; }
+  .yn .price { color: var(--muted); font-size: .82rem; line-height: 1.3; text-align: right; max-width: 16rem; }
   .product {
     display: grid;
     grid-template-columns: 28px 1fr 90px 70px;
@@ -352,16 +352,16 @@
       <h3>Cuts</h3>
       <p class="hint">Our usual “standard cuts” are tenderloins, backstrap/loin chops, top &amp; bottom round steaks, and two knuckle roasts from the hind quarters. Uncheck anything you don’t want kept as a cut — that meat can go into trim for sausage or burger instead.</p>
       <div class="yn"><span>Tenderloins</span><label><input type="checkbox" name="tenderloins" checked /> Yes</label></div>
-      <div class="yn"><span>Backstrap / loin chops</span><label><input type="checkbox" name="backStrap" id="backStrap" checked /> Yes</label></div>
+      <div class="yn"><span>Chops (Backstrap)</span><label><input type="checkbox" name="backStrap" id="backStrap" checked /> Yes</label></div>
       <div class="yn sub-option" id="backStrapWholeRow">
         <span style="padding-left:12px;font-size:.9rem">Keep backstrap whole (not cut into chops)</span>
         <span class="price">Optional</span>
         <label><input type="checkbox" name="backStrapWhole" id="backStrapWhole" /> Yes</label>
       </div>
-      <div class="yn"><span>Hind-quarter steaks (top &amp; bottom round)</span><label><input type="checkbox" name="hindQtr" checked /> Yes</label></div>
+      <div class="yn"><span>Steaks</span><label><input type="checkbox" name="hindQtr" checked /> Yes</label></div>
       <div class="yn">
-        <span>Knuckle roasts</span>
-        <span class="price">Usually 2</span>
+        <span>Roasts</span>
+        <span class="price">More than 2 roasts = fewer steaks</span>
         <label>
           <select name="roasts">
             <option value="0">None</option>
@@ -488,6 +488,7 @@
               <th>Invoice</th>
               <th>Customer</th>
               <th>Game</th>
+              <th>Cuts</th>
               <th>Freeze trim</th>
               <th>Status</th>
               <th>Submitted</th>
@@ -945,6 +946,15 @@
     if (name === "staff") renderOrdersTable();
   }
 
+  function cutsSummary(o) {
+    var parts = [];
+    if (o.tenderloins) parts.push("Tenderloins");
+    if (o.backStrap) parts.push(o.backStrapWhole ? "Chops (Backstrap, whole)" : "Chops (Backstrap)");
+    if (o.hindQtr) parts.push("Steaks");
+    parts.push("Roasts: " + o.roasts);
+    return parts.join(" · ");
+  }
+
   function freezeTrimLabel(value) {
     if (value === "all") return "Yes, Freeze All";
     if (value === "leftover" || value === "rest") return "Yes, Freeze Leftover";
@@ -973,6 +983,7 @@
         "<td><strong>#" + o.invoice + "</strong></td>" +
         "<td>" + escapeHtml(o.name) + "<br><span style='color:var(--muted);font-size:.78rem'>" + escapeHtml(o.phone) + "</span></td>" +
         "<td>" + escapeHtml(o.gameType || "venison") + "</td>" +
+        "<td>" + escapeHtml(cutsSummary(o)) + "</td>" +
         "<td>" + escapeHtml(freezeTrimLabel(o.freezeTrim)) + "</td>" +
         '<td><span class="badge ' + o.status + '">' + o.status + "</span></td>" +
         "<td>" + escapeHtml((o.submittedAt || "").replace("T", " ").slice(0, 16)) + "</td>" +
@@ -1029,10 +1040,8 @@
         (!o.saveHide && !o.saveRack && !o.cape ? "None" : "") +
       "</dd></div>" +
       "<div><dt>Cuts</dt><dd>" +
-        (o.tenderloins ? "Tenderloins · " : "") +
-        (o.backStrap ? (o.backStrapWhole ? "Backstrap whole · " : "Backstrap chops · ") : "") +
-        (o.hindQtr ? "Hind qtr steaks · " : "") +
-        "Roasts: " + o.roasts + " · Freeze trim: " + escapeHtml(freezeTrimLabel(o.freezeTrim)) +
+        escapeHtml(cutsSummary(o)) +
+        " · Freeze trim: " + escapeHtml(freezeTrimLabel(o.freezeTrim)) +
       "</dd></div>" +
       "</dl>" +
       "<h3>Special instructions</h3><p>" + (o.specialInstructions ? escapeHtml(o.specialInstructions) : "<em style='color:var(--muted)'>None</em>") + "</p>" +
@@ -1094,8 +1103,8 @@
         (o.saveHide ? "Hide $15 · " : "") + (o.saveRack ? "Rack $15 · " : "") + (o.cape ? "Cape $75" : "") +
         (!o.saveHide && !o.saveRack && !o.cape ? "—" : "") + "</dd></div>" +
       "<div><dt>Cuts</dt><dd>Tenderloins: " + (o.tenderloins ? "Y" : "N") +
-        " · Backstrap: " + (o.backStrap ? (o.backStrapWhole ? "Y (whole)" : "Y (chops)") : "N") +
-        " · Hind qtr: " + (o.hindQtr ? "Y" : "N") +
+        " · Chops (Backstrap): " + (o.backStrap ? (o.backStrapWhole ? "Y (whole)" : "Y") : "N") +
+        " · Steaks: " + (o.hindQtr ? "Y" : "N") +
         " · Roasts: " + o.roasts +
         " · Freeze trim: " + escapeHtml(freezeTrimLabel(o.freezeTrim)) + "</dd></div>" +
       "</dl>" +
